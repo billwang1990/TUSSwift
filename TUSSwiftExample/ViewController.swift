@@ -7,8 +7,9 @@
 //
 
 import UIKit
+import AssetsLibrary
 
-class ViewController: UIViewController {
+class ViewController: UIViewController,UIImagePickerControllerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,6 +21,14 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-
+    func selectFile(){
+        let vc = UIImagePickerController()
+        vc.mediaTypes = UIImagePickerController.availableMediaTypesForSourceType(vc.sourceType)!
+        
+        self.presentViewController(vc, animated: true) { () -> Void in
+            
+        }
+    }
+    
 }
 

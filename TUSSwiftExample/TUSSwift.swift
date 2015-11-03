@@ -9,6 +9,8 @@
 import Foundation
 
 public typealias UploadProcessBlock = ((Float,Float)->Void)
+public typealias UploadResultBlock = ((NSURL)->Void)
+public typealias UploadFailureBlock = ((NSError)->Void)
 
 public enum TUSUploadState{
     case Idle, CheckingFile, CreatingFile, UploadingFile
@@ -23,7 +25,7 @@ let HTTP_TUS = "Tus-Resumable"
 let HTTP_TUS_VERSION = "1.0.0"
 let HTTP_UPLOAD_META = "Upload-Metadata"
 
-public class TUSSwift{
+public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
     
     var url : NSURL?
     var endPointurl : NSURL!
@@ -33,7 +35,7 @@ public class TUSSwift{
     var fileName : String!
     var processBlock : UploadProcessBlock?
     var state: TUSUploadState = TUSUploadState.Idle
-    var offset: CLongLong = 0
+    var offset: UInt64 = 0
     var urlSession : NSURLSession?
     
     static var resumableUploads:Dictionary<String,String> = {
@@ -63,10 +65,10 @@ public class TUSSwift{
         self.fingerPrint = fingerPrint
         self.uploadHeaders = uploadHeaders
         self.fileName = fileName
-        
     }
     
     func start(){
+        
         if let _ = self.processBlock{
             self.processBlock!(0.0, 0.0)
         }
@@ -74,11 +76,11 @@ public class TUSSwift{
         if let uploadUrl = TUSSwift.resumableUploads[self.fingerPrint]{
             guard let _url = NSURL(string: uploadUrl) else
             {
-                print("init NSURL error, please check your input")
+                print("Init NSURL error, please check your input!!!")
                 return
             }
             self.url = _url
-            //            self.checkFile()
+            self.checkFile()
         }else{
             self.createFile()
         }
@@ -88,6 +90,7 @@ public class TUSSwift{
     func createFile(){
         
         self.state = .CreatingFile
+        
         let size = self.data.length()
         var mutableHeaders : [String:String] = [:]
         mutableHeaders += self.uploadHeaders
@@ -139,13 +142,10 @@ public class TUSSwift{
                 return
             }
             self.handleResponse(response!)
-            
         }).resume()
-
     }
     
     func uploadFile(){
-        
         self.state = .UploadingFile
         var mutableHeader:[String:String] = [:]
         mutableHeader += self.uploadHeaders
@@ -159,12 +159,14 @@ public class TUSSwift{
 
         let configuration = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier("TUSID-\(self.fingerPrint)")
         configuration.HTTPAdditionalHeaders = mutableHeader
+        let session = NSURLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+        let uploadTask = session.uploadTaskWithStreamedRequest(request)
+        uploadTask.resume()
         
-        NSURLSession(configuration: configuration).uploadTaskWithRequest(request, fromData: nil) { (data, response, error) -> Void in
-            if let _ = error{
-                //TODO: error handle
-            }
-        }.resume()
+    }
+    
+    public func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream?) -> Void) {
+        print("hello billwang")
     }
     
     func handleResponse(response:NSURLResponse){
@@ -195,7 +197,7 @@ public class TUSSwift{
                 
                 if (200...201) ~= httpResp.statusCode{
                     if let rangeHeader = headers[HTTP_OFFSET] as? String{
-                        let size = CLongLong(rangeHeader)
+                        let size = UInt64(rangeHeader)
                         if size >= self.offset{
                             self.state = .Idle
                             TUSSwift.resumableUploads.removeValueForKey(self.fingerPrint)
