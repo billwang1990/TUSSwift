@@ -22,9 +22,9 @@ public protocol TUSUploadDataStream:NSStreamDelegate{
     
     func length() -> UInt
     
-    func dataStream() -> NSInputStream
+//    func dataStream() -> NSInputStream
     
-    func getBytes(var buffer:UnsafeMutablePointer<UInt8>, fromOffset:UInt, length:UInt)  -> UInt
+    func getBytes(buffer:UnsafeMutablePointer<UInt8>, fromOffset:UInt, length:UInt)  -> UInt
 }
 
 let TUS_BUFSIZE = (32*1024)
@@ -48,13 +48,12 @@ public class TUSUploadData :NSObject, TUSUploadDataStream{
         return self.inputStream
     }
     
-    public func getBytes(var buffer: UnsafeMutablePointer<UInt8>, fromOffset: UInt, length: UInt) -> UInt {
+    public func getBytes(buffer: UnsafeMutablePointer<UInt8>, fromOffset: UInt, length: UInt) -> UInt {
         let range = NSMakeRange(Int(fromOffset), Int(length))
         if (offset + length > UInt(self.data.length)) {
-            
             return UInt(0)
         }
-        self.data.getBytes(&buffer, range: range)
+        self.data.getBytes(buffer, range: range)
         return length
     }
 
@@ -92,7 +91,8 @@ public class TUSUploadData :NSObject, TUSUploadDataStream{
         case NSStreamEvent.HasSpaceAvailable:
             
             var length = UInt(TUS_BUFSIZE)
-            var buffer = Array<UInt8>(count: TUS_BUFSIZE, repeatedValue: 0)
+            var buffer = [UInt8](count: TUS_BUFSIZE, repeatedValue: 0)
+            
             if (length > self.length() - self.offset) {
                 length = self.length() - self.offset
             }
@@ -102,13 +102,13 @@ public class TUSUploadData :NSObject, TUSUploadDataStream{
                 self.outputStream.close()
                 return
             }
-            let bytesRead = self.getBytes(&buffer, fromOffset: self.offset, length: self.length())
-
+            
+            let bytesRead = self.getBytes(&buffer, fromOffset: self.offset, length: length)
             if bytesRead == 0{
                 //TODO:error handle
                 print("Read bytes from stream failed!!!")
             }else{
-                let bufferWritten = self.outputStream.write(&buffer, maxLength: Int(bytesRead))
+                let bufferWritten = self.outputStream.write(buffer, maxLength: Int(bytesRead))
                 if bufferWritten > 0{
                     if bytesRead != UInt(bufferWritten){
                         print("Read \(bytesRead), but only write \(bufferWritten)")

@@ -20,12 +20,12 @@ let HTTP_PATCH = "PATCH"
 let HTTP_POST = "POST"
 let HTTP_HEAD = "HEAD"
 let HTTP_OFFSET = "Upload-Offset"
-let HTTP_UPLOAD_LENGTH = "Upload-Length"
+let HTTP_UPLOAD_LENGTH = "Entity-Length"
 let HTTP_TUS = "Tus-Resumable"
 let HTTP_TUS_VERSION = "1.0.0"
 let HTTP_UPLOAD_META = "Upload-Metadata"
 
-public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
+public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
     
     var url : NSURL?
     var endPointurl : NSURL!
@@ -42,7 +42,7 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
         
         guard let url = try? TUSSwift.resumableUploadFilePath() as NSURL else
         {
-            print("resume upload path error!!!")
+            print("Resume upload path error!!!\n")
             return [:]
         }
         
@@ -57,7 +57,7 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
         
         guard let _url = NSURL(string: url) else
         {
-            print("init NSURL error, please check your input")
+            print("Init NSURL error, please check your input!!!\n")
             return
         }
         self.endPointurl = _url
@@ -76,7 +76,7 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
         if let uploadUrl = TUSSwift.resumableUploads[self.fingerPrint]{
             guard let _url = NSURL(string: uploadUrl) else
             {
-                print("Init NSURL error, please check your input!!!")
+                print("Init NSURL error, please check your input!!!\n")
                 return
             }
             self.url = _url
@@ -154,7 +154,7 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
         
         let request = NSMutableURLRequest(URL: self.url!, cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
         request.HTTPMethod = HTTP_PATCH
-        request.HTTPBodyStream = self.data.dataStream()
+//        request.HTTPBodyStream = self.data.dataStream()
         request.HTTPShouldHandleCookies = false
 
         let configuration = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier("TUSID-\(self.fingerPrint)")
@@ -166,7 +166,8 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
     }
     
     public func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream?) -> Void) {
-        print("hello billwang")
+        print("NeedNewBodyStream----------------------->\n")
+        completionHandler(self.data.dataStream())
     }
     
     func handleResponse(response:NSURLResponse){
@@ -174,12 +175,13 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
         if let httpResp = response as? NSHTTPURLResponse{
             
             var headers = httpResp.allHeaderFields
-            
+            let statuscode = httpResp.statusCode
+            print("header is \(headers), status \(statuscode)")
             switch self.state{
             case .CreatingFile:
                 
                 guard let location = headers["Location"] as? String else{
-                    print("cannot get location from repsonse header")
+                    print("Cannot get location from repsonse header!!!\n")
                     break
                 }
                 
@@ -188,6 +190,7 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
                 if let fileURL = try? TUSSwift.resumableUploadFilePath() as NSURL{
                     var resumableUploads = TUSSwift.resumableUploads
                     resumableUploads.updateValue(location, forKey: self.fingerPrint)
+                    
                     if (resumableUploads as NSDictionary).writeToURL(fileURL, atomically: true) == false{
                         print("Unable to save resumableUploads file")
                     }
@@ -238,17 +241,16 @@ public class TUSSwift:NSObject, NSURLSessionTaskDelegate{
     }
 }
 
-
 extension TUSSwift{
 
     class func resumableUploadFilePath() throws -> NSURL{
         let fileManager = NSFileManager.defaultManager()
-        let folders = fileManager.URLsForDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)
+        let folders = fileManager.URLsForDirectory(NSSearchPathDirectory.CachesDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)
         let applicationSupportDirectoryURL = folders.last as NSURL!
         let applicationSupportDirectoryPath = applicationSupportDirectoryURL.absoluteString
         
         var isFolder = ObjCBool(false)
-        if fileManager.fileExistsAtPath(applicationSupportDirectoryPath, isDirectory: &isFolder){
+        if fileManager.fileExistsAtPath(applicationSupportDirectoryPath, isDirectory: &isFolder) == false{
             do{
                 try fileManager.createDirectoryAtPath(applicationSupportDirectoryPath, withIntermediateDirectories: true, attributes: nil)
             }catch{
