@@ -1,6 +1,6 @@
 //
 //  TUSUploadData.swift
-//  TUSSwiftExample
+//  TUSSwift
 //
 //  Created by Yaqing Wang on 10/30/15.
 //  Copyright © 2015 billwang. All rights reserved.
@@ -8,15 +8,6 @@
 
 import Foundation
 
-extension NSStream {
-    class func boundStreamsWithBufferSize(bufferSize: Int) ->
-        (inputStream: NSInputStream, outputStream: NSOutputStream) {
-            var readStream: Unmanaged<CFReadStream>?
-            var writeStream: Unmanaged<CFWriteStream>?
-            CFStreamCreateBoundPair(nil, &readStream, &writeStream, bufferSize)
-            return (readStream!.takeUnretainedValue(), writeStream!.takeUnretainedValue())
-    }
-}
 
 public protocol TUSUploadDataStream:NSStreamDelegate{
     
@@ -128,6 +119,16 @@ public class TUSUploadData :NSObject, TUSUploadDataStream{
         default:
             return
         }
+    }
+}
+
+extension NSStream {
+    class func boundStreamsWithBufferSize(bufferSize: Int) ->
+        (inputStream: NSInputStream, outputStream: NSOutputStream) {
+            var readStream: Unmanaged<CFReadStream>?
+            var writeStream: Unmanaged<CFWriteStream>?
+            CFStreamCreateBoundPair(nil, &readStream, &writeStream, bufferSize)
+            return (readStream!.takeUnretainedValue(), writeStream!.takeUnretainedValue())
     }
 }
 

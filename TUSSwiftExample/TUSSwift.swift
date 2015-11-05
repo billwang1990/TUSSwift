@@ -1,6 +1,6 @@
 //
 //  TUSSwift.swift
-//  TUSSwiftExample
+//  TUSSwift
 //
 //  Created by Yaqing Wang on 10/30/15.
 //  Copyright © 2015 billwang. All rights reserved.
@@ -35,17 +35,14 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
     var fileName : String!
     var processBlock : UploadProcessBlock?
     var state: TUSUploadState = TUSUploadState.Idle
-    var offset: UInt64 = 0
+    var offset: UInt = 0
     var urlSession : NSURLSession?
     
     static var resumableUploads:Dictionary<String,String> = {
-        
-        guard let url = try? TUSSwift.resumableUploadFilePath() as NSURL else
-        {
+        guard let url = try? TUSSwift.resumableUploadFilePath() as NSURL else{
             print("Resume upload path error!!!\n")
             return [:]
         }
-        
         if let uploads = NSDictionary(contentsOfURL: url){
             return uploads as! Dictionary
         }else{
@@ -74,8 +71,7 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
         }
         
         if let uploadUrl = TUSSwift.resumableUploads[self.fingerPrint]{
-            guard let _url = NSURL(string: uploadUrl) else
-            {
+            guard let _url = NSURL(string: uploadUrl) else{
                 print("Init NSURL error, please check your input!!!\n")
                 return
             }
@@ -84,57 +80,28 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
         }else{
             self.createFile()
         }
-        
     }
-    
+    //MARK: Tus
     func createFile(){
         
         self.state = .CreatingFile
-        
-        let size = self.data.length()
-        var mutableHeaders : [String:String] = [:]
-        mutableHeaders += self.uploadHeaders
-        mutableHeaders.updateValue("\(size)", forKey: HTTP_UPLOAD_LENGTH)
-        mutableHeaders.updateValue(HTTP_TUS_VERSION, forKey: HTTP_TUS)
-        
-        if let plainData = self.fileName.dataUsingEncoding(NSUTF8StringEncoding){
-        
-            let base64String = plainData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions.Encoding64CharacterLineLength)
-        
-            mutableHeaders.updateValue(self.fileName.stringByAppendingString(base64String), forKey: HTTP_UPLOAD_META)
-            let request = NSMutableURLRequest(URL: self.endPointurl, cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
-            request.HTTPMethod = HTTP_POST
-            request.HTTPShouldHandleCookies = false
-            
-            let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
-            configuration.HTTPAdditionalHeaders = mutableHeaders
-            NSURLSession(configuration: configuration).dataTaskWithRequest(request, completionHandler: { (data, response, error) -> Void in
-                guard let _ = response else{
-                    print("reponse error %s", __FUNCTION__)
-                    return
-                }
-                self.handleResponse(response!)
-                
-            }).resume()
-            
-        }else{
-            //TODO: error handle
-            print("%s create data error", __FUNCTION__)
-        }
-        
+        let (request,headers) =  self.generateRequestAndHeaders()
+        let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
+        configuration.HTTPAdditionalHeaders = headers
+        NSURLSession(configuration: configuration).dataTaskWithRequest(request, completionHandler: { (data, response, error) -> Void in
+            guard let _ = response else{
+                print("reponse error %s", __FUNCTION__)
+                return
+            }
+            self.handleResponse(response!)
+        }).resume()
     }
     
     func checkFile(){
         self.state = .CheckingFile
-        var mutableHeader:[String:String] = [:]
-        mutableHeader += self.uploadHeaders
-        
-        let request = NSMutableURLRequest(URL: self.url!, cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
-        request.HTTPMethod = HTTP_HEAD
-        request.HTTPShouldHandleCookies = false
-        
+        let (request, headers) = self.generateRequestAndHeaders()
         let configuration = NSURLSessionConfiguration.defaultSessionConfiguration()
-        configuration.HTTPAdditionalHeaders = mutableHeader
+        configuration.HTTPAdditionalHeaders = headers
         
         NSURLSession(configuration: configuration).dataTaskWithRequest(request, completionHandler: { (data, response, error) -> Void in
             guard let _ = response else{
@@ -147,22 +114,47 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
     
     func uploadFile(){
         self.state = .UploadingFile
-        var mutableHeader:[String:String] = [:]
-        mutableHeader += self.uploadHeaders
-        mutableHeader.updateValue("\(self.offset)", forKey: HTTP_OFFSET)
-        mutableHeader.updateValue(HTTP_TUS_VERSION, forKey: HTTP_TUS)
-        
-        let request = NSMutableURLRequest(URL: self.url!, cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
-        request.HTTPMethod = HTTP_PATCH
-//        request.HTTPBodyStream = self.data.dataStream()
-        request.HTTPShouldHandleCookies = false
-
+        let (request, headers) = self.generateRequestAndHeaders()
         let configuration = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier("TUSID-\(self.fingerPrint)")
-        configuration.HTTPAdditionalHeaders = mutableHeader
+        configuration.HTTPAdditionalHeaders = headers
         let session = NSURLSession(configuration: configuration, delegate: self, delegateQueue: nil)
         let uploadTask = session.uploadTaskWithStreamedRequest(request)
         uploadTask.resume()
+    }
+    // MARK: private
+    private func generateRequestAndHeaders() -> (NSURLRequest,[String:String]){
         
+        var headers:[String:String] = [:]
+        headers += self.uploadHeaders
+        var url = self.url
+        var mtd = HTTP_POST
+        
+        switch self.state{
+            
+        case .CreatingFile:
+            
+            headers.updateValue("\(self.data.length())", forKey: HTTP_UPLOAD_LENGTH)
+            headers.updateValue(HTTP_TUS_VERSION, forKey: HTTP_TUS)
+            headers.updateValue((self.fileName+self.fileName.base64String()), forKey: HTTP_UPLOAD_META)
+            url = self.endPointurl
+            
+        case .CheckingFile:
+            mtd = HTTP_HEAD
+            
+        case .UploadingFile:
+            headers.updateValue("\(self.offset)", forKey: HTTP_OFFSET)
+            headers.updateValue(HTTP_TUS_VERSION, forKey: HTTP_TUS)
+            mtd = HTTP_PATCH
+            
+        default:
+            break
+        }
+        
+        let request = NSMutableURLRequest(URL: url!, cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
+        request.HTTPShouldHandleCookies = false
+        request.HTTPMethod = mtd
+        
+        return (request,headers)
     }
     
     public func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream?) -> Void) {
@@ -176,15 +168,14 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
             
             var headers = httpResp.allHeaderFields
             let statuscode = httpResp.statusCode
-            print("header is \(headers), status \(statuscode)")
+            print("HTTP status code :\(statuscode)\n")
+            
             switch self.state{
             case .CreatingFile:
-                
                 guard let location = headers["Location"] as? String else{
                     print("Cannot get location from repsonse header!!!\n")
                     break
                 }
-                
                 self.url = NSURL(string: location)
                 
                 if let fileURL = try? TUSSwift.resumableUploadFilePath() as NSURL{
@@ -200,13 +191,12 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
                 
                 if (200...201) ~= httpResp.statusCode{
                     if let rangeHeader = headers[HTTP_OFFSET] as? String{
-                        let size = UInt64(rangeHeader)
+                        let size = UInt(rangeHeader)
                         if size >= self.offset{
                             self.state = .Idle
                             TUSSwift.resumableUploads.removeValueForKey(self.fingerPrint)
                             do{
                                 if (TUSSwift.resumableUploads as NSDictionary).writeToURL(try TUSSwift.resumableUploadFilePath(), atomically: true){
-                                    
                                 }else{
                                     //TODO: handle write file error
                                     print("write dictionary to file failed")
@@ -220,12 +210,12 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
                             self.offset = size!
                         }
                         print("Resumable upload at \(self.url) for \(self.fingerPrint) from \(self.offset) \(rangeHeader)")
-
+                        
                     }else{
                         print("Restart upload at \(self.url) for \(self.fingerPrint)")
                     }
                     self.uploadFile()
-
+                    
                 }else{
                     print("Server responded with \(httpResp.statusCode). Restarting upload")
                     self.createFile()
@@ -242,23 +232,48 @@ public class TUSSwift : NSObject, NSURLSessionTaskDelegate{
 }
 
 extension TUSSwift{
-
+    
     class func resumableUploadFilePath() throws -> NSURL{
-        let fileManager = NSFileManager.defaultManager()
-        let folders = fileManager.URLsForDirectory(NSSearchPathDirectory.CachesDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)
+        
+        let folders = NSFileManager.defaultManager().URLsForDirectory(NSSearchPathDirectory.CachesDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)
+        
         let applicationSupportDirectoryURL = folders.last as NSURL!
         let applicationSupportDirectoryPath = applicationSupportDirectoryURL.absoluteString
         
         var isFolder = ObjCBool(false)
-        if fileManager.fileExistsAtPath(applicationSupportDirectoryPath, isDirectory: &isFolder) == false{
+        if NSFileManager.defaultManager().fileExistsAtPath(applicationSupportDirectoryPath, isDirectory: &isFolder) == false{
             do{
-                try fileManager.createDirectoryAtPath(applicationSupportDirectoryPath, withIntermediateDirectories: true, attributes: nil)
+                try NSFileManager.defaultManager().createDirectoryAtPath(applicationSupportDirectoryPath, withIntermediateDirectories: true, attributes: nil)
             }catch{
-                print("unable to create \(error) directory due")
-                //TODO: error handle
+                print("Unable to create \(error) directory due!!!\n")
             }
         }
         return applicationSupportDirectoryURL.URLByAppendingPathComponent("TUSResumableUploads.plist")
+    }
+}
+
+
+// MARK: Request class
+
+class Request{
+    
+}
+
+// MARK: Manager class
+class Manager {
+    
+    
+}
+
+
+extension String{
+    func base64String() -> String
+    {
+        guard let data = self.dataUsingEncoding(NSUTF8StringEncoding) else{
+            print("Cannot create data with UTF8 encoding!!!\n")
+            return ""
+        }
+        return data.base64EncodedStringWithOptions(NSDataBase64EncodingOptions.Encoding64CharacterLineLength)
     }
 }
 

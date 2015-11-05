@@ -34,8 +34,6 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate, UINaviga
         vc.mediaTypes = UIImagePickerController.availableMediaTypesForSourceType(vc.sourceType)!
         vc.delegate = self
         self.presentViewController(vc, animated: true) { () -> Void in}
-        
-        
     }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
