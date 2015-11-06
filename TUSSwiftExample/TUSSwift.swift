@@ -164,6 +164,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         self.currentTask?.cancel()
     }
     
+    //MARK: Tus
     func createFile(){
         self.state = .CreatingFile
         if let (_, task) = self.genSessionWithTask(){

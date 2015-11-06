@@ -17,134 +17,6 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "TUSSwiftExample/TUSSwift.swift"
-            timestampString = "468474383.735333"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "280"
-            endingLineNumber = "280"
-            landmarkName = "handleResponse(_:error:)"
-            landmarkType = "5">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "TUSSwiftExample.TusTask.handleResponse (TUSSwiftExample.TusTask)(Swift.Optional&lt;__ObjC.NSURLResponse&gt;, error : Swift.Optional&lt;Swift.ErrorType&gt;) -&gt; ()"
-                  moduleName = "TUSSwiftExample"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yaqwang/Desktop/Code/iOS/TUSSwiftExample/TUSSwiftExample/TUSSwift.swift"
-                  timestampString = "468474384.767915"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "280"
-                  endingLineNumber = "280"
-                  offsetFromSymbolStart = "2491">
-               </Location>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "TUSSwiftExample.TusTask.handleResponse (TUSSwiftExample.TusTask)(Swift.Optional&lt;__ObjC.NSURLResponse&gt;, error : Swift.Optional&lt;Swift.ErrorType&gt;) -&gt; ()"
-                  moduleName = "TUSSwiftExample"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/yaqwang/Desktop/Code/iOS/TUSSwiftExample/TUSSwiftExample/TUSSwift.swift"
-                  timestampString = "468474384.768345"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "280"
-                  endingLineNumber = "280"
-                  offsetFromSymbolStart = "2513">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "TUSSwiftExample/TUSUploadData.swift"
-            timestampString = "468474251.428949"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "95"
-            endingLineNumber = "95"
-            landmarkName = "stream(_:handleEvent:)"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "TUSSwiftExample/TUSSwift.swift"
-            timestampString = "468474383.735333"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "293"
-            endingLineNumber = "293"
-            landmarkName = "handleResponse(_:error:)"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "TUSSwiftExample/TUSSwift.swift"
-            timestampString = "468474383.735333"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "284"
-            endingLineNumber = "284"
-            landmarkName = "handleResponse(_:error:)"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "TUSSwiftExample/TUSSwift.swift"
-            timestampString = "468474383.735333"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "292"
-            endingLineNumber = "292"
-            landmarkName = "handleResponse(_:error:)"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "TUSSwiftExample/TUSSwift.swift"
-            timestampString = "468474383.735333"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "286"
-            endingLineNumber = "286"
-            landmarkName = "handleResponse(_:error:)"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "TUSSwiftExample/ViewController.swift"
             timestampString = "468474319.219964"
             startingColumnNumber = "9223372036854775807"
@@ -162,11 +34,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "TUSSwiftExample/TUSSwift.swift"
-            timestampString = "468474380.200206"
+            timestampString = "468482518.79335"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "255"
-            endingLineNumber = "255"
+            startingLineNumber = "252"
+            endingLineNumber = "252"
             landmarkName = "URLSession(_:task:didSendBodyData:totalBytesSent:totalBytesExpectedToSend:)"
             landmarkType = "5">
          </BreakpointContent>
