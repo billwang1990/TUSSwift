@@ -26,37 +26,6 @@ public enum TUSUploadState{
     case Idle, CheckingFile, CreatingFile, UploadingFile
 }
 
-private class Archive {
-    static let shareInstance = Archive()
-    lazy var resumableUploads:Dictionary<String,String> = {
-        if let uploads = NSDictionary(contentsOfURL: resumableUploadFilePath()){
-            return uploads as! Dictionary
-        }else{
-            return [:]
-        }
-    }()
-    
-    subscript(fingerPrint:String) -> String?{
-        get{
-            if let f = self.resumableUploads[fingerPrint]{
-                return f as String
-            }else{
-                return nil
-            }
-        }
-        set{
-            self.resumableUploads[fingerPrint] = newValue!
-            self.archiveResumable()
-        }
-    }
-    
-    func archiveResumable(){
-        if (resumableUploads as NSDictionary).writeToURL(resumableUploadFilePath(), atomically: true) == false{
-            print("Unable to save resumableUploads file")
-        }
-    }
-}
-
 public class TUSSwift{
 
     let queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL)
@@ -110,7 +79,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
     var offset: Int64 = 0
     var currentTask : NSURLSessionTask?
     var contentLength: Int64 = 0
-    
+
     var processBlock : UploadProcessBlock?
     var sucessBlock : UploadResultBlock?
     var failureBlock : UploadFailureBlock?
@@ -134,7 +103,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         if let _ = self.processBlock{
             self.processBlock!(0, 0)
         }
-        if let uploadUrl = Archive.shareInstance[self.fingerPrint]{
+        if let uploadUrl = Cache.shareInstance[self.fingerPrint]{
             guard let _url = NSURL(string: uploadUrl) else{
                 print("Init NSURL error, please check your input!!!\n")
                 return
@@ -197,15 +166,13 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         let request = NSMutableURLRequest(URL: self.url!, cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
         request.HTTPShouldHandleCookies = false
         
-        let completeHandler = {(data:NSData?, response:NSURLResponse?, error:NSError?) in
-            self.handleResponse(response,error: error)
-        }
-        
         let commonSession = { (req:NSURLRequest) -> (NSURLSession, NSURLSessionTask)in
             let conf = NSURLSessionConfiguration.defaultSessionConfiguration()
             conf.HTTPAdditionalHeaders = httpHeaders
             let session = NSURLSession(configuration: conf)
-            let task = session.dataTaskWithRequest(req, completionHandler: completeHandler)
+            let task = session.dataTaskWithRequest(request, completionHandler: { [unowned self] (d, r, e) -> Void in
+                self.handleResponse(r, error: e)
+            })
             return (session, task)
         }
         
@@ -277,7 +244,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
                 }
                 self.url = NSURL(string: location)
                 
-                Archive.shareInstance[self.fingerPrint] = location
+                Cache.shareInstance[self.fingerPrint] = location
                 self.uploadFile()
                 
             case .CheckingFile:
@@ -287,7 +254,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
                         let size = Int64(rangeHeader)
                         if size >= self.offset{
                             self.state = .Idle
-                            Archive.shareInstance -= self.fingerPrint
+                            Cache.shareInstance -= self.fingerPrint
                             break
                         }else{
                             self.offset = size!
@@ -332,7 +299,7 @@ private func += <KeyType, ValueType> (inout lhs: Dictionary<KeyType, ValueType>,
     }
 }
 
-private func -=(lhs:Archive, rhs:String){
+private func -=(lhs:Cache, rhs:String){
     lhs.resumableUploads.removeValueForKey(rhs)
     lhs.archiveResumable()
 }

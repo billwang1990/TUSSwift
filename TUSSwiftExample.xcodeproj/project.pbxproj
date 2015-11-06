@@ -17,6 +17,7 @@
 		C8123E501BE34D8200431B28 /* TUSSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E4E1BE34D8200431B28 /* TUSSwift.swift */; };
 		C8123E521BE34E1000431B28 /* TUSUploadData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E511BE34E1000431B28 /* TUSUploadData.swift */; };
 		C8123E531BE34E1000431B28 /* TUSUploadData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E511BE34E1000431B28 /* TUSUploadData.swift */; };
+		C85F10D11BECA0FD00AB43A3 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C85F10D01BECA0FD00AB43A3 /* Cache.swift */; };
 		C8716FC71BE8AFE000E0B5CD /* TUSAssetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8716FC61BE8AFE000E0B5CD /* TUSAssetData.swift */; };
 /* End PBXBuildFile section */
 
@@ -43,6 +44,7 @@
 		C8123E451BE34D2400431B28 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C8123E4E1BE34D8200431B28 /* TUSSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUSSwift.swift; sourceTree = "<group>"; };
 		C8123E511BE34E1000431B28 /* TUSUploadData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUSUploadData.swift; sourceTree = "<group>"; };
+		C85F10D01BECA0FD00AB43A3 /* Cache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		C8716FC61BE8AFE000E0B5CD /* TUSAssetData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUSAssetData.swift; sourceTree = "<group>"; };
 		C8EE23D51BEB24D400D3F896 /* MyPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = MyPlayground.playground; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -89,6 +91,7 @@
 			children = (
 				C8123E2E1BE34D2400431B28 /* AppDelegate.swift */,
 				C8123E4E1BE34D8200431B28 /* TUSSwift.swift */,
+				C85F10D01BECA0FD00AB43A3 /* Cache.swift */,
 				C8123E511BE34E1000431B28 /* TUSUploadData.swift */,
 				C8716FC61BE8AFE000E0B5CD /* TUSAssetData.swift */,
 				C8123E301BE34D2400431B28 /* ViewController.swift */,
@@ -213,6 +216,7 @@
 				C8123E4F1BE34D8200431B28 /* TUSSwift.swift in Sources */,
 				C8123E521BE34E1000431B28 /* TUSUploadData.swift in Sources */,
 				C8123E311BE34D2400431B28 /* ViewController.swift in Sources */,
+				C85F10D11BECA0FD00AB43A3 /* Cache.swift in Sources */,
 				C8123E2F1BE34D2400431B28 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
