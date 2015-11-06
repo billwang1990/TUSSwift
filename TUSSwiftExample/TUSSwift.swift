@@ -45,7 +45,7 @@ private class Archive {
             }
         }
         set{
-            self.resumableUploads.updateValue(newValue!, forKey: fingerPrint)
+            self.resumableUploads[fingerPrint] = newValue!
             self.archiveResumable()
         }
     }
@@ -61,6 +61,7 @@ public class TUSSwift{
 
     let queue = dispatch_queue_create(nil, DISPATCH_QUEUE_SERIAL)
     static let shareInstance = TUSSwift()
+    var tasks = Array<TusTask>()
     
     class func scheduleUploadTask(url:String, data:TUSUploadData, fingerPrint:String, uploadHeaders :[String:String]=[:], fileName:String) -> TusTask{
         let task = TusTask(url: url, data: data, fingerPrint: fingerPrint, uploadHeaders: uploadHeaders, fileName: fileName)
@@ -70,8 +71,29 @@ public class TUSSwift{
     }
     
     private func scheduleTask(task:TusTask)->Void{
-        dispatch_sync(queue) { () -> Void in
+        dispatch_sync(queue) {[unowned self] () -> Void in
             task.start()
+            self.tasks.append(task)
+        }
+    }
+    
+    public func cancelTask(task:TusTask){
+        task.cancel()
+    }
+    
+    public func pauseTask(task:TusTask){
+        task.pause()
+    }
+    
+    public func cancelAllTasks(){
+        let _ = self.tasks.map { (task)  in
+            task.cancel()
+        }
+    }
+    
+    public func pauseAllTasks(){
+        let _ = self.tasks.map { (task) in
+            task.pause()
         }
     }
 }
@@ -133,6 +155,10 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         }
     }
     
+    func cancel(){
+        self.currentTask?.cancel()
+    }
+    
     func createFile(){
         self.state = .CreatingFile
         if let (_, task) = self.genSessionWithTask(){
@@ -158,15 +184,16 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
     }
     
     private func genSessionWithTask() -> (NSURLSession, NSURLSessionTask)?{
-        var headers:[String:String] = [:]
-        headers += self.uploadHeaders
+        var httpHeaders:[String:String] = [:]
+        httpHeaders += self.uploadHeaders
+        httpHeaders[HTTP_TUS] = HTTP_TUS_VERSION
         
         let request = NSMutableURLRequest(URL: self.url!, cachePolicy: NSURLRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
         request.HTTPShouldHandleCookies = false
         
         let completeHandler = {(data:NSData?, response:NSURLResponse?, error:NSError?) in
             guard let _ = response else{
-                print("reponse error %s", __FUNCTION__)
+                print("Reponse error  \(__FUNCTION__)")
                 return
             }
             self.handleResponse(response!)
@@ -174,15 +201,15 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         
         let commonSession = { (req:NSURLRequest) -> (NSURLSession, NSURLSessionTask)in
             let conf = NSURLSessionConfiguration.defaultSessionConfiguration()
-            conf.HTTPAdditionalHeaders = headers
-            let session = NSURLSession(configuration:  NSURLSessionConfiguration.defaultSessionConfiguration())
+            conf.HTTPAdditionalHeaders = httpHeaders
+            let session = NSURLSession(configuration: conf)
             let task = session.dataTaskWithRequest(req, completionHandler: completeHandler)
             return (session, task)
         }
         
         let uploadSession = { (req:NSURLRequest) -> (NSURLSession, NSURLSessionTask)in
             let configuration = NSURLSessionConfiguration.backgroundSessionConfigurationWithIdentifier("TUSID-\(self.fingerPrint)")
-            configuration.HTTPAdditionalHeaders = headers
+            configuration.HTTPAdditionalHeaders = httpHeaders
             let session = NSURLSession(configuration: configuration, delegate: self, delegateQueue: nil)
             let uploadTask = session.uploadTaskWithStreamedRequest(request)
             return (session, uploadTask)
@@ -190,19 +217,20 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         
         switch self.state{
         case .CreatingFile:
-            headers.updateValue("\(self.data.length())", forKey: HTTP_UPLOAD_LENGTH)
-            headers.updateValue(HTTP_TUS_VERSION, forKey: HTTP_TUS)
-            headers.updateValue((self.fileName+self.fileName.base64String()), forKey: HTTP_UPLOAD_META)
+            print("New created file request------------------------->\n")
+            httpHeaders[HTTP_UPLOAD_LENGTH] = String(self.data.length())
+            httpHeaders[HTTP_UPLOAD_META] = self.fileName+self.fileName.base64String()
             request.HTTPMethod = HTTP_POST
             return commonSession(request)
             
         case .CheckingFile:
+            print("Check upload------------------------->\n")
             request.HTTPMethod = HTTP_HEAD
             return commonSession(request)
             
         case .UploadingFile:
-            headers.updateValue("\(self.offset)", forKey: HTTP_OFFSET)
-            headers.updateValue(HTTP_TUS_VERSION, forKey: HTTP_TUS)
+            print("Start uploading------------------------->\n")
+            httpHeaders[HTTP_OFFSET] = String(self.offset)
             request.HTTPMethod = HTTP_PATCH
             return uploadSession(request)
         default:
@@ -211,9 +239,14 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         return nil
     }
 
+    //MARK: NSURLSessionTask Delegate
     public func URLSession(session: NSURLSession, task: NSURLSessionTask, needNewBodyStream completionHandler: (NSInputStream?) -> Void) {
         print("NeedNewBodyStream----------------------->\n")
         completionHandler(self.data.dataStream())
+    }
+    
+    public func URLSession(session: NSURLSession, task: NSURLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64){
+        print("didSendBodyData : \(bytesSent) totalBytesSent \(totalBytesSent) totalBytesExpectedToSend\(totalBytesExpectedToSend)\n")
     }
     
     func handleResponse(response:NSURLResponse){
@@ -221,7 +254,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         if let httpResp = response as? NSHTTPURLResponse{
             var headers = httpResp.allHeaderFields
             let statuscode = httpResp.statusCode
-            print("HTTP status code :\(statuscode)\n")
+            print("HTTP status code :\(statuscode)\n Header info : \(headers)")
             
             switch self.state{
             case .CreatingFile:
@@ -282,7 +315,7 @@ extension String{
 //MARK: Operation
 private func += <KeyType, ValueType> (inout lhs: Dictionary<KeyType, ValueType>, rhs: Dictionary<KeyType, ValueType>) {
     for (k, v) in rhs {
-        lhs.updateValue(v, forKey: k)
+        lhs[k] = v
     }
 }
 
@@ -294,11 +327,10 @@ private func -=(lhs:Archive, rhs:String){
 func resumableUploadFilePath() -> NSURL{
     
     let folders = NSFileManager.defaultManager().URLsForDirectory(NSSearchPathDirectory.CachesDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)
-    
     let applicationSupportDirectoryURL = folders.last as NSURL!
     let applicationSupportDirectoryPath = applicationSupportDirectoryURL.absoluteString
-    
     var isFolder = ObjCBool(false)
+    
     if NSFileManager.defaultManager().fileExistsAtPath(applicationSupportDirectoryPath, isDirectory: &isFolder) == false{
         do{
             try NSFileManager.defaultManager().createDirectoryAtPath(applicationSupportDirectoryPath, withIntermediateDirectories: true, attributes: nil)
