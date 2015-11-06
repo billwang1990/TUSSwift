@@ -8,9 +8,9 @@
 
 import Foundation
 
-public typealias UploadProcessBlock = ((Float,Float)->Void)
+public typealias UploadProcessBlock = ((Int64,Int64)->Void)
 public typealias UploadResultBlock = ((NSURL)->Void)
-public typealias UploadFailureBlock = ((NSError)->Void)
+public typealias UploadFailureBlock = ((ErrorType)->Void)
 
 
 let HTTP_PATCH = "PATCH"
@@ -100,16 +100,20 @@ public class TUSSwift{
 
 public class TusTask : NSObject, NSURLSessionTaskDelegate{
     
-    private var url : NSURL?
+    private var url : NSURL!
     private var endPointurl : NSURL!
     var data: TUSUploadData!
-    var fingerPrint : String!
-    var uploadHeaders : [String:String]!
+    var fingerPrint : String = ""
+    var uploadHeaders : [String:String] = [:]
     var fileName : String!
-    var processBlock : UploadProcessBlock?
     var state: TUSUploadState = .CreatingFile
-    var offset: UInt = 0
+    var offset: Int64 = 0
     var currentTask : NSURLSessionTask?
+    var contentLength: Int64 = 0
+    
+    var processBlock : UploadProcessBlock?
+    var sucessBlock : UploadResultBlock?
+    var failureBlock : UploadFailureBlock?
     
     init(url:String, data:TUSUploadData, fingerPrint:String, uploadHeaders:[String:String]=[:], fileName:String){
 
@@ -120,6 +124,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         }
         self.endPointurl = _url
         self.data = data
+        self.contentLength = self.data.length()
         self.fingerPrint = fingerPrint
         self.uploadHeaders = uploadHeaders
         self.fileName = fileName
@@ -127,7 +132,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
     
     func start(){
         if let _ = self.processBlock{
-            self.processBlock!(0.0, 0.0)
+            self.processBlock!(0, 0)
         }
         if let uploadUrl = Archive.shareInstance[self.fingerPrint]{
             guard let _url = NSURL(string: uploadUrl) else{
@@ -192,11 +197,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         request.HTTPShouldHandleCookies = false
         
         let completeHandler = {(data:NSData?, response:NSURLResponse?, error:NSError?) in
-            guard let _ = response else{
-                print("Reponse error  \(__FUNCTION__)")
-                return
-            }
-            self.handleResponse(response!)
+            self.handleResponse(response,error: error)
         }
         
         let commonSession = { (req:NSURLRequest) -> (NSURLSession, NSURLSessionTask)in
@@ -217,8 +218,8 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
         
         switch self.state{
         case .CreatingFile:
-            print("New created file request------------------------->\n")
-            httpHeaders[HTTP_UPLOAD_LENGTH] = String(self.data.length())
+            print("New created------------------------->\n")
+            httpHeaders[HTTP_UPLOAD_LENGTH] = String(self.contentLength)
             httpHeaders[HTTP_UPLOAD_META] = self.fileName+self.fileName.base64String()
             request.HTTPMethod = HTTP_POST
             return commonSession(request)
@@ -229,7 +230,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
             return commonSession(request)
             
         case .UploadingFile:
-            print("Start uploading------------------------->\n")
+            print("Start uploading...\n")
             httpHeaders[HTTP_OFFSET] = String(self.offset)
             request.HTTPMethod = HTTP_PATCH
             return uploadSession(request)
@@ -246,10 +247,21 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
     }
     
     public func URLSession(session: NSURLSession, task: NSURLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64){
-        print("didSendBodyData : \(bytesSent) totalBytesSent \(totalBytesSent) totalBytesExpectedToSend\(totalBytesExpectedToSend)\n")
+        self.offset += bytesSent
+        if self.offset == self.contentLength{
+            self.sucessBlock?(self.url)
+        }else
+        {
+            self.processBlock?(self.offset, self.contentLength)
+        }
     }
     
-    func handleResponse(response:NSURLResponse){
+    func handleResponse(response:NSURLResponse?, error:ErrorType?){
+
+        if let _ = error{
+            self.failureBlock?(error!)
+            return
+        }
         
         if let httpResp = response as? NSHTTPURLResponse{
             var headers = httpResp.allHeaderFields
@@ -271,16 +283,16 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
                 
                 if (200...201) ~= httpResp.statusCode{
                     if let rangeHeader = headers[HTTP_OFFSET] as? String{
-                        let size = UInt(rangeHeader)
+                        let size = Int64(rangeHeader)
                         if size >= self.offset{
                             self.state = .Idle
                             Archive.shareInstance -= self.fingerPrint
                             break
                         }else{
                             self.offset = size!
+                            self.data.correctOffset(self.offset)
                         }
                         print("Resumable upload at \(self.url) for \(self.fingerPrint) from \(self.offset) \(rangeHeader)")
-                        
                     }else{
                         print("Restart upload at \(self.url) for \(self.fingerPrint)")
                     }
@@ -296,7 +308,7 @@ public class TusTask : NSObject, NSURLSessionTaskDelegate{
             }
             
         }else{
-            print("reponse type error")
+            print("Reponse error : \(response)\n")
         }
     }
 }

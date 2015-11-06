@@ -19,20 +19,19 @@ class TUSAssetData:TUSUploadData {
         self.asset = asset
     }
     
-    override func length() -> UInt {
-        return UInt(self.asset.defaultRepresentation().size())
+    override func length() -> Int64 {
+        let size = self.asset.defaultRepresentation().size()
+        return Int64(size)
     }
     
-    override func getBytes(buffer: UnsafeMutablePointer<UInt8>, fromOffset: UInt, length: UInt) -> UInt {
+    override func getBytes(buffer: UnsafeMutablePointer<UInt8>, fromOffset: Int64, length: Int64) -> Int64 {
         let offset = Int64(fromOffset)
         let len = Int(length)
         var error:NSError?
         let ret = self.asset.defaultRepresentation().getBytes(buffer, fromOffset: offset , length: len, error: &error)
         if let _  = error{
-            print("GET BYTES ERROR\(error)===> offset:\(offset), length:\(len)")
+            print("Get bytes error occured: \(error), current offset:\(offset), need length:\(len)")
         }
-
-        return UInt(ret)
+        return Int64(ret)
     }
-    
 }

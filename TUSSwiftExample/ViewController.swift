@@ -46,7 +46,7 @@ class ViewController: UIViewController,UIImagePickerControllerDelegate, UINaviga
             let task = TUSSwift.scheduleUploadTask("http://localhost:8000/files", data: uploadData, fingerPrint: fingerprint, fileName: "first.png")
             
             task.processBlock =  { (current, total) in
-                print("current \(current), total is \(total)")
+                print("current \(current), total is \(total)\n")
             }
             
             }, failureBlock: nil)
