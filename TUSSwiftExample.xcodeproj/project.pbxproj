@@ -13,6 +13,11 @@
 		C8123E361BE34D2400431B28 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C8123E351BE34D2400431B28 /* Assets.xcassets */; };
 		C8123E391BE34D2400431B28 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C8123E371BE34D2400431B28 /* LaunchScreen.storyboard */; };
 		C8123E441BE34D2400431B28 /* TUSSwiftExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E431BE34D2400431B28 /* TUSSwiftExampleTests.swift */; };
+		C8123E4F1BE34D8200431B28 /* TUSSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E4E1BE34D8200431B28 /* TUSSwift.swift */; };
+		C8123E501BE34D8200431B28 /* TUSSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E4E1BE34D8200431B28 /* TUSSwift.swift */; };
+		C8123E521BE34E1000431B28 /* TUSUploadData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E511BE34E1000431B28 /* TUSUploadData.swift */; };
+		C8123E531BE34E1000431B28 /* TUSUploadData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8123E511BE34E1000431B28 /* TUSUploadData.swift */; };
+		C8716FC71BE8AFE000E0B5CD /* TUSAssetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8716FC61BE8AFE000E0B5CD /* TUSAssetData.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +41,10 @@
 		C8123E3F1BE34D2400431B28 /* TUSSwiftExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TUSSwiftExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C8123E431BE34D2400431B28 /* TUSSwiftExampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TUSSwiftExampleTests.swift; sourceTree = "<group>"; };
 		C8123E451BE34D2400431B28 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C8123E4E1BE34D8200431B28 /* TUSSwift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUSSwift.swift; sourceTree = "<group>"; };
+		C8123E511BE34E1000431B28 /* TUSUploadData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUSUploadData.swift; sourceTree = "<group>"; };
+		C8716FC61BE8AFE000E0B5CD /* TUSAssetData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUSAssetData.swift; sourceTree = "<group>"; };
+		C8EE23D51BEB24D400D3F896 /* MyPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = MyPlayground.playground; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +68,7 @@
 		C8123E221BE34D2400431B28 = {
 			isa = PBXGroup;
 			children = (
+				C8EE23D51BEB24D400D3F896 /* MyPlayground.playground */,
 				C8123E2D1BE34D2400431B28 /* TUSSwiftExample */,
 				C8123E421BE34D2400431B28 /* TUSSwiftExampleTests */,
 				C8123E2C1BE34D2400431B28 /* Products */,
@@ -78,6 +88,9 @@
 			isa = PBXGroup;
 			children = (
 				C8123E2E1BE34D2400431B28 /* AppDelegate.swift */,
+				C8123E4E1BE34D8200431B28 /* TUSSwift.swift */,
+				C8123E511BE34E1000431B28 /* TUSUploadData.swift */,
+				C8716FC61BE8AFE000E0B5CD /* TUSAssetData.swift */,
 				C8123E301BE34D2400431B28 /* ViewController.swift */,
 				C8123E321BE34D2400431B28 /* Main.storyboard */,
 				C8123E351BE34D2400431B28 /* Assets.xcassets */,
@@ -196,6 +209,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C8716FC71BE8AFE000E0B5CD /* TUSAssetData.swift in Sources */,
+				C8123E4F1BE34D8200431B28 /* TUSSwift.swift in Sources */,
+				C8123E521BE34E1000431B28 /* TUSUploadData.swift in Sources */,
 				C8123E311BE34D2400431B28 /* ViewController.swift in Sources */,
 				C8123E2F1BE34D2400431B28 /* AppDelegate.swift in Sources */,
 			);
@@ -205,7 +221,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C8123E501BE34D8200431B28 /* TUSSwift.swift in Sources */,
 				C8123E441BE34D2400431B28 /* TUSSwiftExampleTests.swift in Sources */,
+				C8123E531BE34E1000431B28 /* TUSUploadData.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -325,6 +343,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = TUSSwiftExample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.billwang1990.TUSSwiftExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -336,6 +355,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = TUSSwiftExample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = io.github.billwang1990.TUSSwiftExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -385,6 +405,7 @@
 				C8123E4A1BE34D2400431B28 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C8123E4B1BE34D2400431B28 /* Build configuration list for PBXNativeTarget "TUSSwiftExampleTests" */ = {
 			isa = XCConfigurationList;
@@ -393,6 +414,7 @@
 				C8123E4D1BE34D2400431B28 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
